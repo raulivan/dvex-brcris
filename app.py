@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 from rule03 import rule_03
 from rule04 import rule_04
+from rule05 import rule_05
 from ulti import load_model_structure, load_model_relations
 from rule01 import rule_01
 from rule02 import rule_02
@@ -90,6 +91,10 @@ def main():
                 
                 st.write('OrgUnits inválidas')
                 st.write(df_rule_04_parte_02)
+                
+                
+                rule_05(files_path=files_path)
+                
     
   
                 

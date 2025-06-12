@@ -1,5 +1,8 @@
 import xml.etree.ElementTree as ET
 import csv
+import sqlite3
+import settings
+
 def load_model_structure(model_file:str):
     """Carrega o arquivo de definição de modelo
 
@@ -52,3 +55,16 @@ def read_csv(path, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL):
         for row in csv_reader:
             content.append(row)
     return content 
+
+def connect_local_database():
+    return sqlite3.connect(settings.LOCAL_DATABASE_PATH)
+
+def execute_sql(conn: sqlite3.Connection, sql:str):
+    cr = conn.cursor()
+    try:
+        cr.execute(sql)
+        cr.close()
+        return True
+    except Exception as error:
+        cr.close()
+        raise Exception(f"Erro on execute_sql  Error: {error}") 
