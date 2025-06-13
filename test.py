@@ -1,6 +1,7 @@
 import os
 from rule02 import rule_02
 from rule05 import rule_05
+from rule06 import rule_06
 import settings
 from pathlib import Path
 from ulti import load_model_structure, load_model_relations
@@ -20,6 +21,8 @@ if __name__ == "__main__":
     # print(df_rule_02.head())
     
     rule_05(files_path=files_path)
+    
+    rule_06(files_path=files_path)
                     
                     
                     

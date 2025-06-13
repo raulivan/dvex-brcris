@@ -6,7 +6,7 @@ import settings
 import xml.etree.ElementTree as ET
 import pandas as pd
 import streamlit as st
-from ulti import load_model_structure, load_model_relations, read_csv, connect_local_database, execute_sql
+from ulti import format_text_sql_field, connect_local_database, execute_sql
 
 
 def __create_database(db:Connection):
@@ -17,7 +17,8 @@ def __create_database(db:Connection):
                     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
                     identifier text, 
                     entity_id text,
-                    file text
+                    file text,
+                    type VARCHAR(100)
                 ); 
                 """)
     
@@ -49,7 +50,8 @@ def __create_database(db:Connection):
                 CREATE TABLE tb_semantic_identifier_deduplicated ( 
                     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
                     identifier text, 
-                    entity_id text
+                    entity_id text,
+                    type VARCHAR(100)
                 ); 
                 """)
     
@@ -74,11 +76,35 @@ def __create_database(db:Connection):
                 ); 
                 """)
 
+    execute_sql(conn=db,sql="CREATE INDEX idx_tb_semantic_identifier_identifier ON tb_semantic_identifier (identifier);")
+    
+    execute_sql(conn=db,sql="CREATE INDEX idx_tb_semantic_identifier_entity_id ON tb_semantic_identifier (entity_id);")
+    
+    execute_sql(conn=db,sql="CREATE INDEX idx_tb_semantic_identifier_type ON tb_semantic_identifier (type);")
+    
+    execute_sql(conn=db,sql="CREATE INDEX idx_tb_entity_fields_entity_id ON tb_entity_fields (entity_id);")
+    
+    execute_sql(conn=db,sql="CREATE INDEX idx_tb_entity_fields_type ON tb_entity_fields (type);")
+    
+    execute_sql(conn=db,sql="CREATE INDEX idx_tb_entity_relations_de_entity_id ON tb_entity_relations (de_entity_id);")
+    
+    execute_sql(conn=db,sql="CREATE INDEX idx_tb_semantic_identifier_deduplicated_identifier ON tb_semantic_identifier_deduplicated (identifier);")
+    
+    execute_sql(conn=db,sql="CREATE INDEX idx_tb_semantic_identifier_deduplicated_entity_id ON tb_semantic_identifier_deduplicated (entity_id);")
+    
+    execute_sql(conn=db,sql="CREATE INDEX idx_tb_semantic_identifier_deduplicated_type ON tb_semantic_identifier_deduplicated (type);")
+
+    execute_sql(conn=db,sql="CREATE INDEX idx_tb_entity_fields_deduplicated_entity_id ON tb_entity_fields_deduplicated (entity_id);")
+    
+    execute_sql(conn=db,sql="CREATE INDEX idx_tb_entity_fields_deduplicated_type ON tb_entity_fields_deduplicated (type);")
+
+    execute_sql(conn=db,sql="CREATE INDEX idx_tb_entity_relations_deduplicated_de_entity_id ON tb_entity_relations_deduplicated (de_entity_id);")
+    
     db.commit()
 
 def rule_05(files_path: List)-> pd.DataFrame:
     
-    st.subheader(f"🧪 Simulando caraga e deduplicação")    
+    st.subheader(f"🧪 Caraga de dados")    
     status_message = st.empty()   
     
     if os.path.exists(settings.LOCAL_DATABASE_PATH):
@@ -118,11 +144,26 @@ def rule_05(files_path: List)-> pd.DataFrame:
                     # Recuperando os campos da entidade
                     for field in entity.findall('field'):
                         field_name = field.get('name')
-                        field_value = field.get('value')
-                        if not entity_ref in tb_entity_fields:
-                            tb_entity_fields[entity_ref] = [(field_name, field_value)]
+                        field_value = format_text_sql_field(field.get('value'))
+                        
+                       
+                        if field_value != 'null':
+                            if not entity_ref in tb_entity_fields:
+                                tb_entity_fields[entity_ref] = [(field_name, field_value)]
+                            else:
+                                tb_entity_fields[entity_ref].append((field_name, field_value))
                         else:
-                            tb_entity_fields[entity_ref].append((field_name, field_value))
+                            for sub_field in field.findall('field'):
+                                sub_field_name = sub_field.get('name')
+                                sub_field_value = format_text_sql_field(sub_field.get('value'))
+                                
+                                field_name_formated = f"{field_name}.{sub_field_name}"
+                                
+                                if not entity_ref in tb_entity_fields:
+                                    tb_entity_fields[entity_ref] = [(field_name_formated, sub_field_value)]
+                                else:
+                                    tb_entity_fields[entity_ref].append((field_name_formated, sub_field_value))
+                                
                 
                 # Recuperando os relacionamentos
                 for relation in root.find('relations'):
@@ -140,11 +181,12 @@ def rule_05(files_path: List)-> pd.DataFrame:
                     entity_ref = item[0] 
                     identifier = item[1]
                     entity_id = de_para_entity[entity_ref]['id']       
-                    file = de_para_entity[entity_ref]['file']                               
-                    sql_insert = f"INSERT INTO tb_semantic_identifier (identifier, entity_id, file) VALUES ('{identifier}', '{entity_id}','{file}');"
+                    file = de_para_entity[entity_ref]['file']  
+                    type = de_para_entity[entity_ref]['type']                               
+                    sql_insert = f"INSERT INTO tb_semantic_identifier (identifier, entity_id, file, type) VALUES ('{identifier}', '{entity_id}','{file}','{type}');"
                     execute_sql(conn=db,sql=sql_insert)
                     contador = contador + 1
-                    if contador > 10000:
+                    if contador > settings.LIMIT_COMMIT:
                         db.commit()
                         contador = 0
                     
@@ -156,10 +198,11 @@ def rule_05(files_path: List)-> pd.DataFrame:
                     for item in valor:
                         name = item[0]
                         value = item[1]
+                        
                         sql_insert = f"INSERT INTO tb_entity_fields (entity_id, type, name, value, file) VALUES ('{entity_id}', '{entity_type}', '{name}', '{value}','{file}');"
                         execute_sql(conn=db,sql=sql_insert)
                         contador = contador + 1
-                        if contador > 10000:
+                        if contador > settings.LIMIT_COMMIT:
                             db.commit()
                             contador = 0
                 
@@ -173,7 +216,7 @@ def rule_05(files_path: List)-> pd.DataFrame:
                         sql_insert = f"INSERT INTO tb_entity_relations (de_entity_id, para_entity_id, type, file) VALUES ('{de_entity_id}', '{para_entity_id}', '{relation_type}','{file}');"
                         execute_sql(conn=db,sql=sql_insert)
                         contador = contador + 1
-                        if contador > 10000:
+                        if contador > settings.LIMIT_COMMIT:
                             db.commit()
                             contador = 0
                         
@@ -181,6 +224,6 @@ def rule_05(files_path: List)-> pd.DataFrame:
                 status_message.error(f"❌ {ex}")   
     
     db.commit()
-    status_message.success(f"✅ Processo concluído com sucesso")
+    status_message.success(f"✅ Carga concluída com sucesso")
     
     

@@ -4,6 +4,7 @@ from pathlib import Path
 from rule03 import rule_03
 from rule04 import rule_04
 from rule05 import rule_05
+from rule06 import rule_06
 from ulti import load_model_structure, load_model_relations
 from rule01 import rule_01
 from rule02 import rule_02
@@ -39,7 +40,7 @@ def main():
 
     xml_file_path = st.text_input(
         "Caminho do Diretório:",
-        value=r'C:\DATABASE-IBICT\Finalizados\2025\PatentsLattes',
+        value=r'C:\DATABASE-IBICT\Finalizados\2025\SoftwareLattes',
         placeholder="Digite o caminho completo aqui...",
         key="xml_directory_input"
     )
@@ -94,6 +95,13 @@ def main():
                 
                 
                 rule_05(files_path=files_path)
+                
+                df_rule_06 = rule_06(files_path=files_path)
+                df_rule_06['antes'] = df_rule_06['antes'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
+                df_rule_06['depois'] = df_rule_06['depois'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
+                
+                st.write('Resultado do processo de deduplicação')
+                st.write(df_rule_06)
                 
     
   

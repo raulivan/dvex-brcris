@@ -68,3 +68,22 @@ def execute_sql(conn: sqlite3.Connection, sql:str):
     except Exception as error:
         cr.close()
         raise Exception(f"Erro on execute_sql  Error: {error}") 
+
+def get_result_rows(conn, sql:str):
+    cr = conn.cursor()
+    try:
+        cr.execute(sql)
+        rows = cr.fetchall()
+        ret = []
+        for row in rows:
+            ret.append(list(row))
+        cr.close()
+        return ret
+    except Exception as error:
+        cr.close()
+        raise Exception(f"Erro on get_result_rows. Error: {error}") 
+
+def format_text_sql_field(value:str):
+    if value == None: return 'null'
+
+    return value.replace('\'','"')
