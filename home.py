@@ -18,12 +18,18 @@ from rule02 import rule_02
 
 
 def main():
-    files_path =  []
-    model_structure = None
-    model_structure_relation = None
+    
+    st.set_page_config(
+        page_title="DVEX - BrCris",
+        page_icon="📊",
+        layout="wide" # Opcional: define o layout da página como wide (mais espaço)
+    )
     
     st.title('DVEX - BrCris')
     st.write('<h4>Data Validator and Explorer in the BrCris Model</h4>',unsafe_allow_html=True)
+    
+    
+    
     
     st.write("Por favor, digite o caminho completo do arquivo do BrCrisModel.")
     st.info("Exemplos de caminho: \n- No Windows: `C:\\Users\\SeuUsuario\\Documentos\\modelo_brcris.xml` \n- No Linux/macOS: `/home/seuusuario/documentos/modelo_brcris.xml`")
@@ -65,43 +71,43 @@ def main():
                     st.error(f"O caminho informado não é um diretório válido ou não existe: `{xml_file_path}`. Por favor, verifique o caminho e tente novamente.")
                     st.stop() 
                 
-                df_rule_01 = rule_01(files_path=files_path)
-                if df_rule_01.empty == False:
-                    st.write("Inconformidades identificadas:")
-                    st.write(df_rule_01)
+                # df_rule_01 = rule_01(files_path=files_path)
+                # if df_rule_01.empty == False:
+                #     st.write("Inconformidades identificadas:")
+                #     st.write(df_rule_01)
                 
-                df_rule_02 = rule_02(files_path=files_path,model_structure=model_structure)
-                if df_rule_02.empty == False:
-                    st.write("Inconformidades identificadas:")
-                    st.write(df_rule_02)
-                
-                
-                df_rule_03_parte_01, df_rule_03_parte_02 = rule_03(files_path=files_path,model_structure=model_structure,model_relation=model_structure_relation)
-                df_rule_03_parte_01['total'] = df_rule_03_parte_01['total'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
-                st.write('Quantidade de entidades')
-                st.write(df_rule_03_parte_01)
-                
-                df_rule_03_parte_02['total'] = df_rule_03_parte_02['total'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
-                st.write('Quantidade de relacionamentos')
-                st.write(df_rule_03_parte_02)
-                
-                df_rule_04_parte_01, df_rule_04_parte_02 = rule_04(files_path=files_path)
-                df_rule_04_parte_01['total'] = df_rule_04_parte_01['total'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
-                st.write('OrgUnits válidas')
-                st.write(df_rule_04_parte_01)
-                
-                st.write('OrgUnits inválidas')
-                st.write(df_rule_04_parte_02)
+                # df_rule_02 = rule_02(files_path=files_path,model_structure=model_structure)
+                # if df_rule_02.empty == False:
+                #     st.write("Inconformidades identificadas:")
+                #     st.write(df_rule_02)
                 
                 
-                rule_05(files_path=files_path)
+                # df_rule_03_parte_01, df_rule_03_parte_02 = rule_03(files_path=files_path,model_structure=model_structure,model_relation=model_structure_relation)
+                # df_rule_03_parte_01['total'] = df_rule_03_parte_01['total'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
+                # st.write('Quantidade de entidades')
+                # st.write(df_rule_03_parte_01)
                 
-                df_rule_06 = rule_06(files_path=files_path)
-                df_rule_06['antes'] = df_rule_06['antes'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
-                df_rule_06['depois'] = df_rule_06['depois'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
+                # df_rule_03_parte_02['total'] = df_rule_03_parte_02['total'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
+                # st.write('Quantidade de relacionamentos')
+                # st.write(df_rule_03_parte_02)
                 
-                st.write('Resultado do processo de deduplicação')
-                st.write(df_rule_06)
+                # df_rule_04_parte_01, df_rule_04_parte_02 = rule_04(files_path=files_path)
+                # df_rule_04_parte_01['total'] = df_rule_04_parte_01['total'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
+                # st.write('OrgUnits válidas')
+                # st.write(df_rule_04_parte_01)
+                
+                # st.write('OrgUnits inválidas')
+                # st.write(df_rule_04_parte_02)
+                
+                
+                # rule_05(files_path=files_path)
+                
+                # df_rule_06 = rule_06(files_path=files_path)
+                # df_rule_06['antes'] = df_rule_06['antes'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
+                # df_rule_06['depois'] = df_rule_06['depois'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
+                
+                # st.write('Resultado do processo de deduplicação')
+                # st.write(df_rule_06)
                 
     
   

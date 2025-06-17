@@ -59,7 +59,7 @@ Esta seção deve fornecer uma visão geral mais detalhada da sua API.
         ```
 5.  Execute a API:
     ```bash
-    python app.py  
+    python home.py  
 
-    streamlit run app.py
+    streamlit run home.py
     ```

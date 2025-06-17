@@ -87,3 +87,15 @@ def format_text_sql_field(value:str):
     if value == None: return 'null'
 
     return value.replace('\'','"')
+
+def get_scalar(conn, sql):
+    try:
+        cr = conn.cursor()
+        cr.execute(sql)
+        rs = cr.fetchone()
+        chave = rs[0]
+        cr.close()
+        return chave
+    except Exception as error:
+        cr.close()
+        raise Exception("Error on get_scalar. Error: %s" % error)

@@ -100,6 +100,25 @@ def __create_database(db:Connection):
 
     execute_sql(conn=db,sql="CREATE INDEX idx_tb_entity_relations_deduplicated_de_entity_id ON tb_entity_relations_deduplicated (de_entity_id);")
     
+    
+    execute_sql(conn=db,sql="""
+                CREATE VIEW IF NOT EXISTS vw_entidades
+                AS
+                SELECT distinct entity_id,type 
+                FROM tb_entity_fields
+                """)
+    
+    execute_sql(conn=db,sql="""
+                CREATE VIEW IF NOT EXISTS vw_entidades_deduplicated
+                AS
+                SELECT distinct entity_id,type 
+                FROM tb_entity_fields_deduplicated
+                """)
+    
+    # execute_sql(conn=db,sql="""
+                
+    #             """)
+    
     db.commit()
 
 def rule_05(files_path: List)-> pd.DataFrame:
