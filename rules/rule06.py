@@ -6,7 +6,7 @@ import settings
 import xml.etree.ElementTree as ET
 import pandas as pd
 import streamlit as st
-from ulti import get_result_rows, connect_local_database, execute_sql
+from ulti import get_result_rows, connect_local_database, execute_sql, get_scalar
 
 
 def rule_06(files_path: List)-> pd.DataFrame:
@@ -49,7 +49,7 @@ def rule_06(files_path: List)-> pd.DataFrame:
                 for item in list_unico_semantic_identifier:
                     item_identifier = item[0]
                     
-                    sql_insert = f"INSERT INTO tb_semantic_identifier_deduplicated (identifier, entity_id) VALUES ('{item_identifier}', '{entity_id_master}');"
+                    sql_insert = f"INSERT INTO tb_semantic_identifier_deduplicated (identifier, entity_id, type) VALUES ('{item_identifier}', '{entity_id_master}', '{type}');"
                     execute_sql(conn=db,sql=sql_insert)
                     contador = contador + 1
                     if contador > settings.LIMIT_COMMIT:
@@ -97,11 +97,22 @@ def rule_06(files_path: List)-> pd.DataFrame:
                 if contador > settings.LIMIT_COMMIT:
                     db.commit()
                     contador = 0
-                
-                
-                
             except Exception as ex:
-                    status_message.error(f"❌ {ex}")   
+                    status_message.error(f"❌ {ex}")  
+        # Armazena o De Para
+        for chave, valor in de_para_entity.items():
+            de_entity_id = chave
+            para_entity_id = valor
+            
+            # Pega o arquivo de origem do De
+            file = str(get_scalar(conn=db,sql=f"SELECT DISTINCT file FROM tb_semantic_identifier WHERE entity_id = '{de_entity_id}'"))
+              
+            sql_insert = f"INSERT INTO tb_de_para (entity_id_de, entity_id_para, file) VALUES ('{de_entity_id}', '{para_entity_id}', '{file}');"
+            execute_sql(conn=db,sql=sql_insert)
+            contador = contador + 1
+            if contador > settings.LIMIT_COMMIT:
+                db.commit()
+                contador = 0   
     
     db.commit()
     

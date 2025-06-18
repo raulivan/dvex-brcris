@@ -75,6 +75,16 @@ def __create_database(db:Connection):
                     type text                    
                 ); 
                 """)
+    
+    execute_sql(conn=db,
+                sql="""
+                CREATE TABLE tb_de_para ( 
+                    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
+                    entity_id_de text, 
+                    entity_id_para text,
+                    file text
+                ); 
+                """)
 
     execute_sql(conn=db,sql="CREATE INDEX idx_tb_semantic_identifier_identifier ON tb_semantic_identifier (identifier);")
     
@@ -238,6 +248,8 @@ def rule_05(files_path: List)-> pd.DataFrame:
                         if contador > settings.LIMIT_COMMIT:
                             db.commit()
                             contador = 0
+                
+                
                         
             except Exception as ex:
                 status_message.error(f"❌ {ex}")   

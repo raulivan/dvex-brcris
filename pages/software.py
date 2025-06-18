@@ -2,7 +2,7 @@ import os
 import plotly.express as px 
 import streamlit as st
 import pandas as pd
-
+import settings
 from dash_util import build_card
 from ulti import connect_local_database, get_scalar
 
@@ -14,6 +14,14 @@ st.set_page_config(
 
 st.title("Análise do conjunto de dados Software")
 st.write("Aqui você poderá ver gráficos e tabelas com os dados extraídos dos seus arquivos XML.")
+
+xml_file_path = st.text_input(
+        "Caminho do banco de dados local:",
+        value=settings.LOCAL_DATABASE_PATH,
+        placeholder="Digite o caminho completo aqui...",
+        key="xml_directory_input",
+        disabled=True
+    )
 
 def __build_char_depositDate(db):
     query_grafico = """
@@ -118,7 +126,40 @@ def __build_total_relacionamentos(db):
         st.dataframe(df) 
         st.info(f"Total de linhas: {len(df.index):.2f}")
 
-            
+def __build_total_merge(db):
+    
+    df = pd.read_sql_query(f"""
+                           
+            SELECT dp.entity_id_para,e.type, count(dp.entity_id_de) as total 
+            FROM tb_de_para dp
+            INNER JOIN vw_entidades_deduplicated  e on dp.entity_id_para = e.entity_id
+            group by 1,2
+            order by 2, 3 desc
+
+                           """, db)
+    if not df.empty:
+        st.subheader(f"Total de entidade combinadas após deduplicação")
+        df_filtered = df[df['type'] == 'Software']
+        st.dataframe(df_filtered) 
+        st.info(f"Total de linhas: {len(df.index):.2f}")
+
+def __build_total_atributos(db):
+    
+    df = pd.read_sql_query(f"""
+                           
+            SELECT f.entity_id,count(f.id) as total
+            FROM tb_entity_fields_deduplicated f
+            WHERE f.type = 'Software' 
+            GROUP BY 1
+            order by 2 desc, 1
+
+                           """, db)
+    if not df.empty:
+        st.subheader(f"Total de atributos por entidade")
+        st.dataframe(df) 
+        st.info(f"Total de linhas: {len(df.index):.2f}")
+
+             
 # Botão para carregar os dados
 if st.button("Atualizar"):
     status_message = st.empty()
@@ -131,7 +172,6 @@ if st.button("Atualizar"):
 
             # 4. Exibir no Streamlit
             if not df.empty:
-                status_message.success(f"Dados carregados com sucesso! ✅")
                 st.subheader(f"Entidade geradas")
                 st.dataframe(df) 
                 st.info(f"Total de linhas: {len(df.index):.2f}")
@@ -150,8 +190,18 @@ if st.button("Atualizar"):
             
             st.markdown("---") 
             
+            # Exibe o total de rotinas combinadas
+            __build_total_merge(db)
+            
+            st.markdown("---")
+            
             # Verificando a quantidade de relacionamentos da entidade
             __build_total_relacionamentos(db)     
+            
+            st.markdown("---")
+            
+            # Verifica a quantidade de atributos
+            __build_total_atributos(db)
             
             st.markdown("---")
 
@@ -159,3 +209,7 @@ if st.button("Atualizar"):
 
         except Exception as e:
             status_message.error(f"Ocorreu um erro inesperado: {e} ❌")
+        
+        status_message.success(f"Dados carregados com sucesso! ✅")
+    
+    

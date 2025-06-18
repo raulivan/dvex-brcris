@@ -1,11 +1,11 @@
 import os
-from rule02 import rule_02
-from rule05 import rule_05
-from rule06 import rule_06
+
+from rules.rule05 import rule_05
+from rules.rule06 import rule_06
 import settings
 from pathlib import Path
 from ulti import load_model_structure, load_model_relations
-from rule01 import rule_01
+
 
 if __name__ == "__main__":
     model_structure = load_model_structure(settings.XML_BRCRIS_MODEL_PATH)

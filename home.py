@@ -1,13 +1,10 @@
 import streamlit as st
 import os
 from pathlib import Path
-from rule03 import rule_03
-from rule04 import rule_04
-from rule05 import rule_05
-from rule06 import rule_06
+from rules.rule01 import rule_01
 from ulti import load_model_structure, load_model_relations
-from rule01 import rule_01
-from rule02 import rule_02
+
+
 # import pandas as pd
 # 
 # 
@@ -71,10 +68,10 @@ def main():
                     st.error(f"O caminho informado não é um diretório válido ou não existe: `{xml_file_path}`. Por favor, verifique o caminho e tente novamente.")
                     st.stop() 
                 
-                # df_rule_01 = rule_01(files_path=files_path)
-                # if df_rule_01.empty == False:
-                #     st.write("Inconformidades identificadas:")
-                #     st.write(df_rule_01)
+                df_rule_01 = rule_01(files_path=files_path)
+                if df_rule_01.empty == False:
+                    st.write("Inconformidades identificadas:")
+                    st.write(df_rule_01)
                 
                 # df_rule_02 = rule_02(files_path=files_path,model_structure=model_structure)
                 # if df_rule_02.empty == False:
