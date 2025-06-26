@@ -16,7 +16,7 @@ st.title("Entidade")
 
 txt_entity_id = st.text_input(
     "Entity ID:",
-    value='53c495f3b45d4d09ac21f92b521b5877',
+    value='',
     placeholder="Digite o Entity Id...",
     key="txt_entity_id"
 )
@@ -25,8 +25,11 @@ txt_entity_id = st.text_input(
 def __build_identificadores_semanticos(db, entity_id:str):
     
     df = pd.read_sql_query(f"""
-                           
-           SELECT identifier FROM tb_semantic_identifier_deduplicated where entity_id = '{entity_id}'
+           SELECT DISTINCT identifier 
+            FROM (
+            SELECT identifier FROM tb_semantic_identifier_deduplicated where entity_id =  '{entity_id}'
+            union ALL
+            SELECT identifier FROM tb_semantic_identifier where entity_id =  '{entity_id}') AS tab
 
                            """, db)
     if not df.empty:
@@ -37,8 +40,13 @@ def __build_identificadores_semanticos(db, entity_id:str):
 def __build_atributos(db, entity_id:str):
     
     df = pd.read_sql_query(f"""
-                           
-           SELECT name, value FROM tb_entity_fields_deduplicated where entity_id = '{entity_id}' order by name
+           SELECT DISTINCT name, value 
+            FROM (
+
+            SELECT name, value FROM tb_entity_fields_deduplicated where entity_id = '{entity_id}'
+            union ALL
+            SELECT name, value FROM tb_entity_fields where entity_id = '{entity_id}') AS tab
+            order by name
 
                            """, db)
     if not df.empty:
@@ -49,8 +57,11 @@ def __build_atributos(db, entity_id:str):
 def __build_relacionamentos(db, entity_id:str):
     
     df = pd.read_sql_query(f"""
-                           
-           SELECT para_entity_id,type FROM tb_entity_relations_deduplicated where de_entity_id = '{entity_id}' 
+           SELECT DISTINCT para_entity_id,type 
+            FROM (
+            SELECT para_entity_id,type FROM tb_entity_relations_deduplicated where de_entity_id = '{entity_id}' 
+            union ALL
+            SELECT para_entity_id,type FROM tb_entity_relations where de_entity_id = '{entity_id}' ) AS tab
 
                            """, db)
     if not df.empty:
@@ -82,9 +93,26 @@ def __build_arquivos(db, entity_id:str):
         st.subheader(f"Arquivos relacionados")
         st.dataframe(df) 
         st.info(f"Total de linhas: {len(df.index):.2f}")
+
+def __build_entidades_combinadas(db, entity_id:str):
+    
+    df = pd.read_sql_query(f"""
+                           
+           SELECT entity_id_de, file FROM tb_de_para
+            where entity_id_para = '{entity_id}' 
+
+                           """, db)
+    if not df.empty:
+        st.subheader(f"Entidades combinadas")
+        st.dataframe(df) 
+        st.info(f"Total de linhas: {len(df.index):.2f}")
+    else:
+        st.warning("Entidade elminada no processo de deduplicação")
                 
 if st.button("Visualizar"):
+    st.subheader(f"Detalhes da entidade: {txt_entity_id}")
     with st.spinner(f"Carregando os dados..."):
+        
         db = connect_local_database()
         
         __build_identificadores_semanticos(db=db,entity_id=txt_entity_id)
@@ -98,6 +126,12 @@ if st.button("Visualizar"):
         __build_relacionamentos(db=db,entity_id=txt_entity_id)
         
         st.markdown("---")
-    
+
+        __build_entidades_combinadas(db=db,entity_id=txt_entity_id)
+        
+        st.markdown("---")
+        
         __build_arquivos(db=db,entity_id=txt_entity_id)
+        
+        db.close()
     

@@ -7,7 +7,7 @@ import pandas as pd
 from tqdm import tqdm
 from ulti import load_model_structure, load_model_relations
 
-def rule_03(files_path: List)-> pd.DataFrame:
+def rule_03xxx(files_path: List)-> pd.DataFrame:
     """Verifica a deduplicação dos registros
     Returns:
         pd.DataFrame: As inconsistências encontradas

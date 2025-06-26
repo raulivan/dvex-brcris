@@ -6,6 +6,10 @@ import settings
 from dash_util import build_card
 from ulti import connect_local_database, get_scalar
 
+from streamlit_modal import Modal
+import webbrowser # NOVO: Para abrir links em nova aba
+import urllib.parse # NOVO: Para codificar URLs
+
 st.set_page_config(
     page_title="Software", 
     page_icon="💾", 
@@ -23,6 +27,16 @@ xml_file_path = st.text_input(
         disabled=True
     )
 
+def __build_table_deduplicated(db):
+    # pass
+    df_deduplicated = pd.read_sql_query(f"SELECT distinct entity_id,value as title FROM tb_entity_fields_deduplicated where type = 'Software' and name like '%title%' order by  value limit 500000", db)
+
+    if not df_deduplicated.empty:
+        st.subheader(f"Entidades deduplicadas estabelecidas")
+        st.dataframe(df_deduplicated) 
+        st.info(f"Total de linhas: {len(df_deduplicated.index):.2f}")
+        
+        
 def __build_char_depositDate(db):
     query_grafico = """
     SELECT tab.ano, count(tab.entity_id) as total
@@ -159,7 +173,8 @@ def __build_total_atributos(db):
         st.dataframe(df) 
         st.info(f"Total de linhas: {len(df.index):.2f}")
 
-             
+
+    
 # Botão para carregar os dados
 if st.button("Atualizar"):
     status_message = st.empty()
@@ -168,15 +183,23 @@ if st.button("Atualizar"):
         try:
             db = connect_local_database()
             
-            df = pd.read_sql_query(f"SELECT * FROM tb_entity_fields where type = 'Software' order by entity_id, name limit 500000", db)
+            df = pd.read_sql_query(f"SELECT entity_id,value as title, file  FROM tb_entity_fields where type = 'Software' and name like '%title%' order by  value limit 500000", db)
 
-            # 4. Exibir no Streamlit
+            # Exibir no Streamlit
             if not df.empty:
-                st.subheader(f"Entidade geradas")
+                st.subheader(f"Entidades geradas")
                 st.dataframe(df) 
                 st.info(f"Total de linhas: {len(df.index):.2f}")
+                
             else:
                 status_message.warning(f"Não existem dados para serem exibidos. ⚠️")
+                st.stop() 
+                
+            
+            st.markdown("---")
+            
+            __build_table_deduplicated(db)
+               
 
             st.markdown("---")
             
@@ -204,12 +227,17 @@ if st.button("Atualizar"):
             __build_total_atributos(db)
             
             st.markdown("---")
-
+            
+            
+            
+                            
             db.close()
 
         except Exception as e:
             status_message.error(f"Ocorreu um erro inesperado: {e} ❌")
         
         status_message.success(f"Dados carregados com sucesso! ✅")
+
+
     
-    
+

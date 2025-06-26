@@ -2,6 +2,11 @@ import streamlit as st
 import os
 from pathlib import Path
 from rules.rule01 import rule_01
+from rules.rule02 import rule_02
+from rules.rule03 import rule_03
+from rules.rule04 import rule_04
+from rules.rule05 import rule_05
+from rules.rule06 import rule_06
 from ulti import load_model_structure, load_model_relations
 
 
@@ -73,38 +78,38 @@ def main():
                     st.write("Inconformidades identificadas:")
                     st.write(df_rule_01)
                 
-                # df_rule_02 = rule_02(files_path=files_path,model_structure=model_structure)
-                # if df_rule_02.empty == False:
-                #     st.write("Inconformidades identificadas:")
-                #     st.write(df_rule_02)
+                df_rule_02 = rule_02(files_path=files_path,model_structure=model_structure)
+                if df_rule_02.empty == False:
+                    st.write("Inconformidades identificadas:")
+                    st.write(df_rule_02)
                 
                 
-                # df_rule_03_parte_01, df_rule_03_parte_02 = rule_03(files_path=files_path,model_structure=model_structure,model_relation=model_structure_relation)
-                # df_rule_03_parte_01['total'] = df_rule_03_parte_01['total'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
-                # st.write('Quantidade de entidades')
-                # st.write(df_rule_03_parte_01)
+                df_rule_03_parte_01, df_rule_03_parte_02 = rule_03(files_path=files_path,model_structure=model_structure,model_relation=model_structure_relation)
+                df_rule_03_parte_01['total'] = df_rule_03_parte_01['total'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
+                st.write('Quantidade de entidades')
+                st.write(df_rule_03_parte_01)
                 
-                # df_rule_03_parte_02['total'] = df_rule_03_parte_02['total'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
-                # st.write('Quantidade de relacionamentos')
-                # st.write(df_rule_03_parte_02)
+                df_rule_03_parte_02['total'] = df_rule_03_parte_02['total'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
+                st.write('Quantidade de relacionamentos')
+                st.write(df_rule_03_parte_02)
                 
-                # df_rule_04_parte_01, df_rule_04_parte_02 = rule_04(files_path=files_path)
-                # df_rule_04_parte_01['total'] = df_rule_04_parte_01['total'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
-                # st.write('OrgUnits válidas')
-                # st.write(df_rule_04_parte_01)
+                df_rule_04_parte_01, df_rule_04_parte_02 = rule_04(files_path=files_path)
+                df_rule_04_parte_01['total'] = df_rule_04_parte_01['total'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
+                st.write('OrgUnits válidas')
+                st.write(df_rule_04_parte_01)
                 
-                # st.write('OrgUnits inválidas')
-                # st.write(df_rule_04_parte_02)
+                st.write('OrgUnits inválidas')
+                st.write(df_rule_04_parte_02)
                 
                 
-                # rule_05(files_path=files_path)
+                rule_05(files_path=files_path)
                 
-                # df_rule_06 = rule_06(files_path=files_path)
-                # df_rule_06['antes'] = df_rule_06['antes'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
-                # df_rule_06['depois'] = df_rule_06['depois'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
+                df_rule_06 = rule_06(files_path=files_path)
+                df_rule_06['antes'] = df_rule_06['antes'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
+                df_rule_06['depois'] = df_rule_06['depois'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
                 
-                # st.write('Resultado do processo de deduplicação')
-                # st.write(df_rule_06)
+                st.write('Resultado do processo de deduplicação')
+                st.write(df_rule_06)
                 
     
   
