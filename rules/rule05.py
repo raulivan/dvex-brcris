@@ -6,7 +6,7 @@ import settings
 import xml.etree.ElementTree as ET
 import pandas as pd
 import streamlit as st
-from ulti import format_text_sql_field, connect_local_database, execute_sql
+from ulti import connect_deduplicated_database, connect_depara_database, format_text_sql_field, connect_local_database, execute_sql
 
 
 def __create_database(db:Connection):
@@ -82,9 +82,25 @@ def __create_database(db:Connection):
                     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
                     entity_id_de text, 
                     entity_id_para text,
+                    de_file text,
+                    para_file text
+                ); 
+                """)
+    
+    execute_sql(conn=db,
+                sql="""
+                CREATE TABLE tb_de_para_id_to_entity ( 
+                    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
+                    identifier text, 
+                    entity_id text,
+                    type text,
                     file text
                 ); 
                 """)
+    
+    execute_sql(conn=db,sql="CREATE INDEX idx_tb_de_para_id_to_entity_identifier ON tb_de_para_id_to_entity (identifier);")
+    
+    execute_sql(conn=db,sql="CREATE INDEX idx_tb_de_para_id_to_entity_entity_id ON tb_de_para_id_to_entity (entity_id);")
 
     execute_sql(conn=db,sql="CREATE INDEX idx_tb_semantic_identifier_identifier ON tb_semantic_identifier (identifier);")
     
@@ -130,6 +146,99 @@ def __create_database(db:Connection):
     #             """)
     
     db.commit()
+    
+def __create_depara_database(db:Connection):
+
+    execute_sql(conn=db,
+                sql="""
+                CREATE TABLE tb_de_para ( 
+                    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
+                    entity_id_de text, 
+                    entity_id_para text,
+                    de_file text,
+                    para_file text
+                ); 
+                """)
+    
+    execute_sql(conn=db,
+                sql="""
+                CREATE TABLE tb_de_para_id_to_entity ( 
+                    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
+                    identifier text, 
+                    entity_id text,
+                    type text,
+                    file text
+                ); 
+                """)
+    
+    execute_sql(conn=db,sql="CREATE INDEX idx_tb_de_para_id_to_entity_identifier ON tb_de_para_id_to_entity (identifier);")
+    
+    execute_sql(conn=db,sql="CREATE INDEX idx_tb_de_para_id_to_entity_entity_id ON tb_de_para_id_to_entity (entity_id);")
+
+    
+    db.commit()
+
+def __create_deduplicated_database(db:Connection):
+
+    
+    execute_sql(conn=db,
+                sql="""
+                CREATE TABLE tb_semantic_identifier_deduplicated ( 
+                    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
+                    identifier text, 
+                    entity_id text,
+                    type VARCHAR(100)
+                ); 
+                """)
+    
+    execute_sql(conn=db,
+                sql="""
+                CREATE TABLE tb_entity_fields_deduplicated ( 
+                    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
+                    entity_id text,
+                    type VARCHAR(100),
+                    name text,
+                    value text
+                ); 
+                """)
+
+    execute_sql(conn=db,
+                sql="""
+                CREATE TABLE tb_entity_relations_deduplicated ( 
+                    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
+                    de_entity_id text,
+                    para_entity_id text,
+                    type text                    
+                ); 
+                """)
+
+    
+    
+    execute_sql(conn=db,sql="CREATE INDEX idx_tb_semantic_identifier_deduplicated_identifier ON tb_semantic_identifier_deduplicated (identifier);")
+    
+    execute_sql(conn=db,sql="CREATE INDEX idx_tb_semantic_identifier_deduplicated_entity_id ON tb_semantic_identifier_deduplicated (entity_id);")
+    
+    execute_sql(conn=db,sql="CREATE INDEX idx_tb_semantic_identifier_deduplicated_type ON tb_semantic_identifier_deduplicated (type);")
+
+    execute_sql(conn=db,sql="CREATE INDEX idx_tb_entity_fields_deduplicated_entity_id ON tb_entity_fields_deduplicated (entity_id);")
+    
+    execute_sql(conn=db,sql="CREATE INDEX idx_tb_entity_fields_deduplicated_type ON tb_entity_fields_deduplicated (type);")
+
+    execute_sql(conn=db,sql="CREATE INDEX idx_tb_entity_relations_deduplicated_de_entity_id ON tb_entity_relations_deduplicated (de_entity_id);")
+    
+    
+    execute_sql(conn=db,sql="""
+                CREATE VIEW IF NOT EXISTS vw_entidades_deduplicated
+                AS
+                SELECT distinct entity_id,type 
+                FROM tb_entity_fields_deduplicated
+                """)
+    
+    # execute_sql(conn=db,sql="""
+                
+    #             """)
+    
+    db.commit()
 
 def rule_05(files_path: List)-> pd.DataFrame:
     
@@ -140,7 +249,12 @@ def rule_05(files_path: List)-> pd.DataFrame:
         os.remove(settings.LOCAL_DATABASE_PATH)
 
     db = connect_local_database()
+    depara_db = connect_depara_database()
+    deduplicated_db = connect_deduplicated_database()
+    
     __create_database(db)
+    __create_depara_database(depara_db)
+    __create_deduplicated_database(deduplicated_db)
     
     with st.spinner("Realizando a carga de dados..."):
         contador = 0
@@ -255,6 +369,9 @@ def rule_05(files_path: List)-> pd.DataFrame:
                 status_message.error(f"❌ {ex}")   
     
     db.commit()
+    db.close()
+    depara_db.close()
+    deduplicated_db.close()
     status_message.success(f"✅ Carga concluída com sucesso")
     
     

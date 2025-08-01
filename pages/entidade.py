@@ -4,7 +4,7 @@ import streamlit as st
 import pandas as pd
 import settings
 from dash_util import build_card
-from ulti import connect_local_database, get_scalar
+from ulti import connect_deduplicated_database, connect_depara_database, connect_local_database, get_scalar
 
 st.set_page_config(
     page_title="Entidade", 
@@ -22,71 +22,123 @@ txt_entity_id = st.text_input(
 )
 
 
-def __build_identificadores_semanticos(db, entity_id:str):
+def __build_identificadores_semanticos(db,deduplicated_db, entity_id:str):
     
     df = pd.read_sql_query(f"""
            SELECT DISTINCT identifier 
-            FROM (
-            SELECT identifier FROM tb_semantic_identifier_deduplicated where entity_id =  '{entity_id}'
-            union ALL
-            SELECT identifier FROM tb_semantic_identifier where entity_id =  '{entity_id}') AS tab
-
-                           """, db)
+            FROM 
+            tb_semantic_identifier_deduplicated where entity_id =  '{entity_id}'
+           
+                           """, deduplicated_db)
     if not df.empty:
-        st.subheader(f"Identificadores semânticos")
+        st.subheader(f"Identificadores semânticos após deduplicação")
         st.dataframe(df) 
         st.info(f"Total de linhas: {len(df.index):.2f}")
+    
+    df2 = pd.read_sql_query(f"""
+           SELECT DISTINCT identifier 
+            FROM 
+            tb_semantic_identifier where entity_id =  '{entity_id}'
+           
+                           """, db)
+    if not df2.empty:
+        st.subheader(f"Identificadores antes da deduplicação")
+        st.dataframe(df2) 
+        st.info(f"Total de linhas: {len(df2.index):.2f}")
 
-def __build_atributos(db, entity_id:str):
+def __build_atributos(db,deduplicated_db, entity_id:str):
     
     df = pd.read_sql_query(f"""
            SELECT DISTINCT name, value 
-            FROM (
+            FROM 
 
-            SELECT name, value FROM tb_entity_fields_deduplicated where entity_id = '{entity_id}'
-            union ALL
-            SELECT name, value FROM tb_entity_fields where entity_id = '{entity_id}') AS tab
+            tb_entity_fields_deduplicated where entity_id = '{entity_id}'
+            
+            order by name
+
+                           """, deduplicated_db)
+    if not df.empty:
+        st.subheader(f"Atributos da entidade após deduplicação")
+        st.dataframe(df) 
+        st.info(f"Total de linhas: {len(df.index):.2f}")
+    
+    df2 = pd.read_sql_query(f"""
+           SELECT DISTINCT name, value 
+            FROM 
+
+            tb_entity_fields where entity_id = '{entity_id}'
+            
             order by name
 
                            """, db)
-    if not df.empty:
-        st.subheader(f"Atributos da entidade")
-        st.dataframe(df) 
-        st.info(f"Total de linhas: {len(df.index):.2f}")
+    if not df2.empty:
+        st.subheader(f"Atributos da entidade antes da deduplicação")
+        st.dataframe(df2) 
+        st.info(f"Total de linhas: {len(df2.index):.2f}")
 
-def __build_relacionamentos(db, entity_id:str):
+def __build_relacionamentos(db,deduplicated_db, entity_id:str):
     
     df = pd.read_sql_query(f"""
            SELECT DISTINCT para_entity_id,type 
-            FROM (
-            SELECT para_entity_id,type FROM tb_entity_relations_deduplicated where de_entity_id = '{entity_id}' 
-            union ALL
-            SELECT para_entity_id,type FROM tb_entity_relations where de_entity_id = '{entity_id}' ) AS tab
+            FROM 
+            tb_entity_relations_deduplicated where de_entity_id = '{entity_id}' 
+           
 
-                           """, db)
+                           """, deduplicated_db)
     if not df.empty:
-        st.subheader(f"Essa entidade relaciona com:")
+        st.subheader(f"Essa entidade relaciona com (após deduplicação):")
         st.dataframe(df) 
         st.info(f"Total de linhas: {len(df.index):.2f}")
         
-    
-    
     df2 = pd.read_sql_query(f"""
-                           
-           SELECT de_entity_id,type FROM tb_entity_relations_deduplicated where para_entity_id = '{entity_id}' 
+           SELECT DISTINCT para_entity_id,type 
+            FROM 
+            tb_entity_relations where de_entity_id = '{entity_id}' 
+           
 
                            """, db)
     if not df2.empty:
-        st.subheader(f"Entidades que relacionam esta entidade:")
+        st.subheader(f"Essa entidade relaciona com (antes da deduplicação):")
         st.dataframe(df2) 
         st.info(f"Total de linhas: {len(df2.index):.2f}")
+        
+    
+    
+    df3 = pd.read_sql_query(f"""
+                           
+           SELECT de_entity_id,type FROM tb_entity_relations_deduplicated where para_entity_id = '{entity_id}' 
+
+                           """, deduplicated_db)
+    if not df3.empty:
+        st.subheader(f"Entidades que relacionam esta entidade após deduplicação:")
+        st.dataframe(df3) 
+        st.info(f"Total de linhas: {len(df3.index):.2f}")
+        
+    df4 = pd.read_sql_query(f"""
+                           
+           SELECT de_entity_id,type FROM tb_entity_relations where para_entity_id = '{entity_id}' 
+
+                           """, db)
+    if not df4.empty:
+        st.subheader(f"Entidades que relacionam esta entidade antes da deduplicação:")
+        st.dataframe(df4) 
+        st.info(f"Total de linhas: {len(df4.index):.2f}")
 
 
 def __build_arquivos(db, entity_id:str):
     
     df = pd.read_sql_query(f"""
-                           
-           SELECT file FROM tb_de_para where entity_id_para =  '{entity_id}' 
+           
+           select DISTINCT  file
+           FROM           
+           (SELECT de_file as file FROM tb_de_para where entity_id_para =  '{entity_id}' 
+           union all 
+           SELECT para_file as file FROM tb_de_para where entity_id_para =  '{entity_id}' 
+           union all 
+           SELECT de_file as file FROM tb_de_para where entity_id_de =  '{entity_id}' 
+           union all 
+           SELECT para_file as file FROM tb_de_para where entity_id_de =  '{entity_id}') as tabela 
+
 
                            """, db)
     if not df.empty:
@@ -98,7 +150,7 @@ def __build_entidades_combinadas(db, entity_id:str):
     
     df = pd.read_sql_query(f"""
                            
-           SELECT entity_id_de, file FROM tb_de_para
+           SELECT entity_id_de, de_file FROM tb_de_para
             where entity_id_para = '{entity_id}' 
 
                            """, db)
@@ -114,24 +166,28 @@ if st.button("Visualizar"):
     with st.spinner(f"Carregando os dados..."):
         
         db = connect_local_database()
+        deduplicated_db = connect_deduplicated_database()
+        depara_db = connect_depara_database()
         
-        __build_identificadores_semanticos(db=db,entity_id=txt_entity_id)
-        
-        st.markdown("---")
-        
-        __build_atributos(db=db,entity_id=txt_entity_id)
+        __build_identificadores_semanticos(db=db,deduplicated_db=deduplicated_db, entity_id=txt_entity_id)
         
         st.markdown("---")
         
-        __build_relacionamentos(db=db,entity_id=txt_entity_id)
+        __build_atributos(db=db,deduplicated_db=deduplicated_db,entity_id=txt_entity_id)
+        
+        st.markdown("---")
+        
+        __build_relacionamentos(db=db,deduplicated_db=deduplicated_db,entity_id=txt_entity_id)
         
         st.markdown("---")
 
-        __build_entidades_combinadas(db=db,entity_id=txt_entity_id)
+        __build_entidades_combinadas(db=depara_db,entity_id=txt_entity_id)
         
         st.markdown("---")
         
-        __build_arquivos(db=db,entity_id=txt_entity_id)
+        __build_arquivos(db=depara_db,entity_id=txt_entity_id)
         
         db.close()
+        depara_db.close()
+        deduplicated_db.close()
     

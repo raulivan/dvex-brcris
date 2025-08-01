@@ -111,9 +111,6 @@ def main():
                 st.write('Resultado do processo de deduplicação')
                 st.write(df_rule_06)
                 
-    
-  
-                
             else:
                 st.warning("Por favor, informe os valores solicitados.")
         except Exception as ex:

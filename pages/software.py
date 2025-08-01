@@ -4,7 +4,7 @@ import streamlit as st
 import pandas as pd
 import settings
 from dash_util import build_card
-from ulti import connect_local_database, get_scalar
+from ulti import connect_deduplicated_database, connect_depara_database, connect_local_database, get_scalar
 
 from streamlit_modal import Modal
 import webbrowser # NOVO: Para abrir links em nova aba
@@ -22,22 +22,35 @@ st.write("Aqui você poderá ver gráficos e tabelas com os dados extraídos dos
 xml_file_path = st.text_input(
         "Caminho do banco de dados local:",
         value=settings.LOCAL_DATABASE_PATH,
-        placeholder="Digite o caminho completo aqui...",
         key="xml_directory_input",
+        disabled=True
+    )
+
+xml_file_path2 = st.text_input(
+        "Caminho do banco de dados de De/Para:",
+        value=settings.LOCAL_DATABASE_DEPARA_PATH,
+        key="xml_directory_input2",
+        disabled=True
+    )
+
+xml_file_path3 = st.text_input(
+        "Caminho do banco de dados deduplicado:",
+        value=settings.LOCAL_DATABASE_DEDUPLICATED_PATH,
+        key="xml_directory_input3",
         disabled=True
     )
 
 def __build_table_deduplicated(db):
     # pass
-    df_deduplicated = pd.read_sql_query(f"SELECT distinct entity_id,value as title FROM tb_entity_fields_deduplicated where type = 'Software' and name like '%title%' order by  value limit 500000", db)
+    df_deduplicated = pd.read_sql_query(f"SELECT distinct entity_id, value as title FROM tb_entity_fields_deduplicated where type = 'Software' and name like '%title%' order by  value limit 500000", db)
 
     if not df_deduplicated.empty:
-        st.subheader(f"Entidades deduplicadas estabelecidas")
+        st.subheader(f"Primeiras 500.000 Entidades deduplicadas")
         st.dataframe(df_deduplicated) 
         st.info(f"Total de linhas: {len(df_deduplicated.index):.2f}")
         
         
-def __build_char_depositDate(db):
+def __build_char_depositDate(db, deduplicated_db):
     query_grafico = """
     SELECT tab.ano, count(tab.entity_id) as total
     FROM
@@ -81,7 +94,7 @@ def __build_char_depositDate(db):
     ORDER BY 1
     """
         
-    df_grafico = pd.read_sql_query(query_grafico, db)
+    df_grafico = pd.read_sql_query(query_grafico, deduplicated_db)
         
     if not df_grafico.empty:        
         fig = px.bar(
@@ -101,13 +114,13 @@ def __build_char_depositDate(db):
 
         st.plotly_chart(fig, use_container_width=True)
 
-def __build_totalizadores(db):
+def __build_totalizadores(db, deduplicated_db):
 
     coluna_01, coluna_02 = st.columns([1, 1 ]) # Com 2 colunas iguais
 
     
     with coluna_01:
-        total = int(get_scalar(conn=db,sql="SELECT count(DISTINCT entity_id) as total FROM tb_entity_fields where type = 'Software' "))
+        total = int(get_scalar(conn=db,sql="SELECT count(entity_id) as total FROM vw_entidades where type = 'Software' "))
         # formatted_total_registros = f"{total:,.0f}".replace(",", "X").replace(".", ",").replace("X", ".")
         # st.metric(label="Total de Entidades", value=formatted_total_registros)
         
@@ -118,7 +131,7 @@ def __build_totalizadores(db):
             )
     
     with coluna_02:
-        total = int(get_scalar(conn=db,sql="SELECT count(DISTINCT entity_id) as total FROM tb_entity_fields_deduplicated where type = 'Software'"))
+        total = int(get_scalar(conn=deduplicated_db,sql="SELECT count(entity_id) as total FROM vw_entidades_deduplicated where type = 'Software'"))
         st.markdown(
                 build_card(label="Total de Entidades únicas",total=total),
                 unsafe_allow_html=True
@@ -174,6 +187,30 @@ def __build_total_atributos(db):
         st.info(f"Total de linhas: {len(df.index):.2f}")
 
 
+def __build_table_duplicated_identifiers(db):
+    # pass
+    df_deduplicated = pd.read_sql_query(f"""
+                                        
+                SELECT entity_id, namespace, COUNT(valor) as total
+                FROM
+                (SELECT 
+                    substr(identifier, 1, instr(identifier, '::') - 1) AS namespace,
+                    substr(identifier, instr(identifier, '::') + 2) AS valor,
+                    entity_id,
+                    type
+                FROM 
+                    tb_semantic_identifier_deduplicated
+                WHERE 
+                    type = 'Software') as tabela
+                group by entity_id, namespace
+                having COUNT(valor) > 1
+                                        
+                                        """, db)
+
+    if not df_deduplicated.empty:
+        st.subheader(f"Entidades com Identificadores Semanticos duplicados")
+        st.dataframe(df_deduplicated) 
+        # st.info(f"Total de linhas: {len(df_deduplicated.index):.2f}")
     
 # Botão para carregar os dados
 if st.button("Atualizar"):
@@ -182,12 +219,14 @@ if st.button("Atualizar"):
     with st.spinner(f"Carregando os dados..."):
         try:
             db = connect_local_database()
+            # depara_db = connect_depara_database()
+            deduplicated_db = connect_deduplicated_database()
             
             df = pd.read_sql_query(f"SELECT entity_id,value as title, file  FROM tb_entity_fields where type = 'Software' and name like '%title%' order by  value limit 500000", db)
 
             # Exibir no Streamlit
             if not df.empty:
-                st.subheader(f"Entidades geradas")
+                st.subheader(f"Primeiras 500.000 Entidades geradas")
                 st.dataframe(df) 
                 st.info(f"Total de linhas: {len(df.index):.2f}")
                 
@@ -198,33 +237,36 @@ if st.button("Atualizar"):
             
             st.markdown("---")
             
-            __build_table_deduplicated(db)
-               
+            __build_table_deduplicated(deduplicated_db)
+            
+            
+            # Identificadores semanticos duiplicados
+            __build_table_duplicated_identifiers(deduplicated_db)   
 
             st.markdown("---")
             
             # Gerando os totalizadores
-            __build_totalizadores(db)
+            __build_totalizadores(db,deduplicated_db)
             
             st.markdown("---")
             
             # Gerando gráfico de barras
-            __build_char_depositDate(db)  
+            __build_char_depositDate(db, deduplicated_db)  
             
             st.markdown("---") 
             
             # Exibe o total de rotinas combinadas
-            __build_total_merge(db)
+            __build_total_merge(deduplicated_db)
             
             st.markdown("---")
             
             # Verificando a quantidade de relacionamentos da entidade
-            __build_total_relacionamentos(db)     
+            __build_total_relacionamentos(deduplicated_db)     
             
             st.markdown("---")
             
             # Verifica a quantidade de atributos
-            __build_total_atributos(db)
+            __build_total_atributos(deduplicated_db)
             
             st.markdown("---")
             
@@ -232,6 +274,7 @@ if st.button("Atualizar"):
             
                             
             db.close()
+            deduplicated_db.close()
 
         except Exception as e:
             status_message.error(f"Ocorreu um erro inesperado: {e} ❌")
