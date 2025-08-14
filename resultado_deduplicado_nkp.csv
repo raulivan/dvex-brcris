@@ -1,0 +1,4 @@
+identifier;type;entity_id;file
+Pessoa|1d10;Pessoa;Entidade01Variacao1 | Entidade01Variacao2;Arquivo01.xml | Arquivo02.xml
+Pessoa|1d20;Pessoa;Entidade02Variacao3 | Entidade02Variacao4;Arquivo03.xml | Arquivo04.xml
+Pessoa|1d30;Pessoa;Entidade03Variacao5 | Entidade03Variacao6 | Entidade03Variacao7 | Entidade03Variacao7;Arquivo05.xml | Arquivo06.xml | Arquivo07.xml | Arquivo07.xml

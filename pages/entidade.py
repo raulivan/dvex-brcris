@@ -25,10 +25,10 @@ txt_entity_id = st.text_input(
 def __build_identificadores_semanticos(db,deduplicated_db, entity_id:str):
     
     df = pd.read_sql_query(f"""
-           SELECT DISTINCT identifier 
+           SELECT identifier 
             FROM 
             tb_semantic_identifier_deduplicated where entity_id =  '{entity_id}'
-           
+            order by identifier
                            """, deduplicated_db)
     if not df.empty:
         st.subheader(f"Identificadores semânticos após deduplicação")
@@ -39,7 +39,7 @@ def __build_identificadores_semanticos(db,deduplicated_db, entity_id:str):
            SELECT DISTINCT identifier 
             FROM 
             tb_semantic_identifier where entity_id =  '{entity_id}'
-           
+           order by identifier
                            """, db)
     if not df2.empty:
         st.subheader(f"Identificadores antes da deduplicação")

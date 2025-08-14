@@ -210,7 +210,7 @@ def __build_table_duplicated_identifiers(db):
     if not df_deduplicated.empty:
         st.subheader(f"Entidades com Identificadores Semanticos duplicados")
         st.dataframe(df_deduplicated) 
-        # st.info(f"Total de linhas: {len(df_deduplicated.index):.2f}")
+        st.info(f"Total de linhas: {len(df_deduplicated.index):.2f}")
     
 # Botão para carregar os dados
 if st.button("Atualizar"):
