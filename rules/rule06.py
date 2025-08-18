@@ -45,21 +45,21 @@ def rule_06(files_path: List)-> pd.DataFrame:
             G.add_edge(identifier, entity)
 
         # Gerar e salvar visualização do grafo
-        plt.figure(figsize=(12, 8))
-        pos = nx.spring_layout(G)
+        # plt.figure(figsize=(12, 8))
+        # pos = nx.spring_layout(G)
         
         # Cores customizadas por tipo
-        colors = [G.nodes[node]['color'] for node in G.nodes()]
+        # colors = [G.nodes[node]['color'] for node in G.nodes()]
         
-        nx.draw_networkx(
-            G, 
-            pos,
-            with_labels=True,
-            node_size=1500,
-            node_color=colors,
-            font_size=8,
-            edge_color='gray'
-        )
+        # nx.draw_networkx(
+        #     G, 
+        #     pos,
+        #     with_labels=True,
+        #     node_size=1500,
+        #     node_color=colors,
+        #     font_size=8,
+        #     edge_color='gray'
+        # )
         
         # plt.title("Grafo de Deduplicação de Entidades", size=15)
         # plt.axis('off')

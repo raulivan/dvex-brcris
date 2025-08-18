@@ -4,7 +4,7 @@ import streamlit as st
 import pandas as pd
 import settings
 from dash_util import build_card
-from ulti import connect_deduplicated_database, connect_depara_database, connect_local_database, get_scalar
+from ulti import connect_deduplicated_database, connect_local_database, get_scalar
 
 st.set_page_config(
     page_title="Entidade", 
@@ -150,8 +150,7 @@ def __build_entidades_combinadas(db, entity_id:str):
     
     df = pd.read_sql_query(f"""
                            
-           SELECT entity_id_de, de_file FROM tb_de_para
-            where entity_id_para = '{entity_id}' 
+            SELECT file FROM tb_entity_files where entity_id= '{entity_id}' 
 
                            """, db)
     if not df.empty:
@@ -167,7 +166,6 @@ if st.button("Visualizar"):
         
         db = connect_local_database()
         deduplicated_db = connect_deduplicated_database()
-        depara_db = connect_depara_database()
         
         __build_identificadores_semanticos(db=db,deduplicated_db=deduplicated_db, entity_id=txt_entity_id)
         
@@ -181,7 +179,7 @@ if st.button("Visualizar"):
         
         st.markdown("---")
 
-        __build_entidades_combinadas(db=depara_db,entity_id=txt_entity_id)
+        __build_entidades_combinadas(db=deduplicated_db,entity_id=txt_entity_id)
         
         st.markdown("---")
         

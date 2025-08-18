@@ -84,22 +84,22 @@ def main():
                     st.write(df_rule_02)
                 
                 
-                df_rule_03_parte_01, df_rule_03_parte_02 = rule_03(files_path=files_path,model_structure=model_structure,model_relation=model_structure_relation)
-                df_rule_03_parte_01['total'] = df_rule_03_parte_01['total'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
-                st.write('Quantidade de entidades')
-                st.write(df_rule_03_parte_01)
+                # df_rule_03_parte_01, df_rule_03_parte_02 = rule_03(files_path=files_path,model_structure=model_structure,model_relation=model_structure_relation)
+                # df_rule_03_parte_01['total'] = df_rule_03_parte_01['total'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
+                # st.write('Quantidade de entidades')
+                # st.write(df_rule_03_parte_01)
                 
-                df_rule_03_parte_02['total'] = df_rule_03_parte_02['total'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
-                st.write('Quantidade de relacionamentos')
-                st.write(df_rule_03_parte_02)
+                # df_rule_03_parte_02['total'] = df_rule_03_parte_02['total'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
+                # st.write('Quantidade de relacionamentos')
+                # st.write(df_rule_03_parte_02)
                 
-                df_rule_04_parte_01, df_rule_04_parte_02 = rule_04(files_path=files_path)
-                df_rule_04_parte_01['total'] = df_rule_04_parte_01['total'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
-                st.write('OrgUnits válidas')
-                st.write(df_rule_04_parte_01)
+                # df_rule_04_parte_01, df_rule_04_parte_02 = rule_04(files_path=files_path)
+                # df_rule_04_parte_01['total'] = df_rule_04_parte_01['total'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
+                # st.write('OrgUnits válidas')
+                # st.write(df_rule_04_parte_01)
                 
-                st.write('OrgUnits inválidas')
-                st.write(df_rule_04_parte_02)
+                # st.write('OrgUnits inválidas')
+                # st.write(df_rule_04_parte_02)
                 
                 
                 rule_05(files_path=files_path)

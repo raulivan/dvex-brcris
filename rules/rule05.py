@@ -6,7 +6,7 @@ import settings
 import xml.etree.ElementTree as ET
 import pandas as pd
 import streamlit as st
-from ulti import connect_deduplicated_database, connect_depara_database, format_text_sql_field, connect_local_database, execute_sql
+from ulti import connect_deduplicated_database, format_text_sql_field, connect_local_database, execute_sql
 
 
 def __create_database(db:Connection):

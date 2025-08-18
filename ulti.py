@@ -59,9 +59,6 @@ def read_csv(path, delimiter=';', quotechar='"', quoting=csv.QUOTE_ALL):
 def connect_local_database():
     return sqlite3.connect(settings.LOCAL_DATABASE_PATH)
 
-def connect_depara_database():
-    return sqlite3.connect(settings.LOCAL_DATABASE_DEPARA_PATH)
-
 def connect_deduplicated_database():
     return sqlite3.connect(settings.LOCAL_DATABASE_DEDUPLICATED_PATH)
 

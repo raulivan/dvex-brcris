@@ -4,7 +4,7 @@ import streamlit as st
 import pandas as pd
 import settings
 from dash_util import build_card
-from ulti import connect_deduplicated_database, connect_depara_database, connect_local_database, get_scalar
+from ulti import connect_deduplicated_database, connect_local_database, get_scalar
 
 from streamlit_modal import Modal
 import webbrowser # NOVO: Para abrir links em nova aba
@@ -23,13 +23,6 @@ xml_file_path = st.text_input(
         "Caminho do banco de dados local:",
         value=settings.LOCAL_DATABASE_PATH,
         key="xml_directory_input",
-        disabled=True
-    )
-
-xml_file_path2 = st.text_input(
-        "Caminho do banco de dados de De/Para:",
-        value=settings.LOCAL_DATABASE_DEPARA_PATH,
-        key="xml_directory_input2",
         disabled=True
     )
 
@@ -219,11 +212,11 @@ if st.button("Atualizar"):
     with st.spinner(f"Carregando os dados..."):
         try:
             db = connect_local_database()
-            # depara_db = connect_depara_database()
             deduplicated_db = connect_deduplicated_database()
             
             df = pd.read_sql_query(f"SELECT entity_id,value as title, file  FROM tb_entity_fields where type = 'Software' and name like '%title%' order by  value limit 500000", db)
 
+            st.info("Indicador #1")
             # Exibir no Streamlit
             if not df.empty:
                 st.subheader(f"Primeiras 500.000 Entidades geradas")
@@ -237,35 +230,42 @@ if st.button("Atualizar"):
             
             st.markdown("---")
             
+            st.info("Indicador #2")
             __build_table_deduplicated(deduplicated_db)
             
-            
+            st.markdown("---")
             # Identificadores semanticos duiplicados
+            st.info("Indicador #3")
             __build_table_duplicated_identifiers(deduplicated_db)   
 
             st.markdown("---")
             
             # Gerando os totalizadores
+            st.info("Indicador #4")
             __build_totalizadores(db,deduplicated_db)
             
             st.markdown("---")
             
             # Gerando gráfico de barras
+            st.info("Indicador #5")
             __build_char_depositDate(db, deduplicated_db)  
             
             st.markdown("---") 
             
             # Exibe o total de rotinas combinadas
+            st.info("Indicador #6")
             __build_total_merge(deduplicated_db)
             
             st.markdown("---")
             
             # Verificando a quantidade de relacionamentos da entidade
+            st.info("Indicador #7")
             __build_total_relacionamentos(deduplicated_db)     
             
             st.markdown("---")
             
             # Verifica a quantidade de atributos
+            st.info("Indicador #8")
             __build_total_atributos(deduplicated_db)
             
             st.markdown("---")
