@@ -170,7 +170,7 @@ def rule_05(files_path: List)-> pd.DataFrame:
     
     __create_database(db)
     __create_deduplicated_database(deduplicated_db)
-    
+    conmtador_auxiliar = 0
     with st.spinner("Realizando a carga de dados..."):
         contador = 0
         for xml_file in files_path:
@@ -185,9 +185,14 @@ def rule_05(files_path: List)-> pd.DataFrame:
                 
                 # Percorrendo cada entidade do arquivo
                 for entity in root.find('entities'):
+                    conmtador_auxiliar = conmtador_auxiliar + 1
+                    
                     entity_type = entity.get('type')
                     entity_ref = entity.get('ref')
                     entity_id = uuid.uuid4()
+                    
+                    if entity_ref == None:
+                        entity_ref = f'{entity_type}{conmtador_auxiliar}'
                     
                     de_para_entity[entity_ref]={
                         'id': entity_id.hex,
@@ -196,8 +201,12 @@ def rule_05(files_path: List)-> pd.DataFrame:
                     }
                     
                     # Recuperando os identificadores semanticos
-                    for semantic_id  in entity.findall('.//semanticIdentifier'):                            
-                        tb_semantic_identifier.append((entity_ref, semantic_id.text))
+                    for semantic_id  in entity.findall('.//semanticIdentifier'):    
+                        semantic_id_value = semantic_id.text  
+                        if (semantic_id_value == None) or (semantic_id_value == ''):
+                            semantic_id_value =  semantic_id.get('value')
+                       
+                        tb_semantic_identifier.append((entity_ref, semantic_id_value))
                             
                     # Recuperando os campos da entidade
                     for field in entity.findall('field'):

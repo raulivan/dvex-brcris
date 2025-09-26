@@ -73,15 +73,15 @@ def main():
                     st.error(f"O caminho informado não é um diretório válido ou não existe: `{xml_file_path}`. Por favor, verifique o caminho e tente novamente.")
                     st.stop() 
                 
-                df_rule_01 = rule_01(files_path=files_path)
-                if df_rule_01.empty == False:
-                    st.write("Inconformidades identificadas:")
-                    st.write(df_rule_01)
+                # df_rule_01 = rule_01(files_path=files_path)
+                # if df_rule_01.empty == False:
+                #     st.write("Inconformidades identificadas:")
+                #     st.write(df_rule_01)
                 
-                df_rule_02 = rule_02(files_path=files_path,model_structure=model_structure)
-                if df_rule_02.empty == False:
-                    st.write("Inconformidades identificadas:")
-                    st.write(df_rule_02)
+                # df_rule_02 = rule_02(files_path=files_path,model_structure=model_structure)
+                # if df_rule_02.empty == False:
+                #     st.write("Inconformidades identificadas:")
+                #     st.write(df_rule_02)
                 
                 
                 # df_rule_03_parte_01, df_rule_03_parte_02 = rule_03(files_path=files_path,model_structure=model_structure,model_relation=model_structure_relation)

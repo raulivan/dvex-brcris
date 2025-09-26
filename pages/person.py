@@ -4,7 +4,7 @@ import streamlit as st
 import pandas as pd
 import settings
 from dash_util import build_card
-from ulti import connect_deduplicated_database, connect_depara_database, connect_local_database, get_scalar
+from ulti import connect_deduplicated_database, connect_local_database, get_scalar
 
 from streamlit_modal import Modal
 import webbrowser # NOVO: Para abrir links em nova aba
@@ -26,12 +26,6 @@ xml_file_path = st.text_input(
         disabled=True
     )
 
-xml_file_path2 = st.text_input(
-        "Caminho do banco de dados de De/Para:",
-        value=settings.LOCAL_DATABASE_DEPARA_PATH,
-        key="xml_directory_input2",
-        disabled=True
-    )
 
 xml_file_path3 = st.text_input(
         "Caminho do banco de dados deduplicado:",
