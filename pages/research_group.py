@@ -1,11 +1,18 @@
+import os
+import plotly.express as px 
 import streamlit as st
 import pandas as pd
-
 import settings
-from ulti import connect_deduplicated_database, connect_local_database
+from dash_util import build_card
+from ulti import connect_deduplicated_database, connect_local_database, get_scalar
+
+from streamlit_modal import Modal
+import webbrowser # NOVO: Para abrir links em nova aba
+import urllib.parse
+
 from util.analysis_functions import brcriss_duplicado, brcriss_mal_formatado, listing_of_deduplicated_records, quantidade_campos_apos_deduplicacao, total_entidades_este_tipo_entidade_relaciona, total_entidades_que_relacionam_com_esta_entidade, totalizar_de_entidade, validar_conformidade_com_modelo
 
-ENTITY_TYPE = 'Patent'
+ENTITY_TYPE = 'ResearchGroup'
 
 st.set_page_config(
     page_title=ENTITY_TYPE, 
@@ -13,7 +20,7 @@ st.set_page_config(
     layout="wide"              # (Opcional) Pode ser "centered" (padrão) ou "wide" para ocupar mais largura
 )
 
-st.title("Análise do conjunto de dados Patentes")
+st.title("Análise do conjunto de dados Grupo de Pesquisa")
 
 xml_file_path = st.text_input(
         "Caminho do banco de dados local:",
@@ -44,6 +51,7 @@ valor_numerico = st.number_input(
     value=500000,                                    # Valor inicial padrão
     step=1000                                        # Incremento de 1000
 )
+    
 # Botão para carregar os dados
 if st.button("Atualizar"):
     status_message = st.empty()
@@ -60,7 +68,7 @@ if st.button("Atualizar"):
             validar_conformidade_com_modelo(entity_type=ENTITY_TYPE, db=deduplicated_db,model_path=brcris_model_path, limit=valor_numerico)
             
             # Listagem de entidade deduplicadas
-            listing_of_deduplicated_records(entity_type=ENTITY_TYPE,field_name='title', db=deduplicated_db, limit=valor_numerico)
+            listing_of_deduplicated_records(entity_type=ENTITY_TYPE,field_name='name', db=deduplicated_db, limit=valor_numerico)
                           
             # BrCriss mal formatado
             brcriss_mal_formatado(entity_type=ENTITY_TYPE, db=deduplicated_db, limit=valor_numerico)
@@ -77,7 +85,8 @@ if st.button("Atualizar"):
             # Total de entidades que relacionam com esta entidade
             total_entidades_que_relacionam_com_esta_entidade(entity_type=ENTITY_TYPE, db=deduplicated_db)
             
-     
+                       
+                            
             db.close()
             deduplicated_db.close()
 
@@ -85,3 +94,6 @@ if st.button("Atualizar"):
             status_message.error(f"Ocorreu um erro inesperado: {e} ❌")
         
         status_message.success(f"Dados carregados com sucesso! ✅")
+
+
+    

@@ -245,7 +245,7 @@ def validar_conformidade_com_modelo(entity_type:str, db: Connection, model_path:
                 
         """, db)
     if not df_campos.empty:
-        st.subheader(f"Campos:")
+        st.subheader(f"Campos inválidos:")
         st.dataframe(df_campos) 
         st.info(f"Total de linhas: {len(df_campos.index):.2f}")
     else:
@@ -267,7 +267,7 @@ def validar_conformidade_com_modelo(entity_type:str, db: Connection, model_path:
                 
         """, db)
     if not df_relacionamentos.empty:
-        st.subheader(f"Relacionamentos:")
+        st.subheader(f"Relacionamentos inválidos:")
         st.dataframe(df_relacionamentos) 
         st.info(f"Total de linhas: {len(df_relacionamentos.index):.2f}")
     else:

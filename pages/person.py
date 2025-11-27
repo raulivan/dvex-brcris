@@ -10,7 +10,7 @@ from streamlit_modal import Modal
 import webbrowser # NOVO: Para abrir links em nova aba
 import urllib.parse
 
-from util.analysis_functions import brcriss_duplicado, listing_of_deduplicated_records, quantidade_campos_apos_deduplicacao, total_entidades_este_tipo_entidade_relaciona, total_entidades_que_relacionam_com_esta_entidade, totalizar_de_entidade # NOVO: Para codificar URLs
+from util.analysis_functions import brcriss_duplicado, brcriss_mal_formatado, listing_of_deduplicated_records, quantidade_campos_apos_deduplicacao, total_entidades_este_tipo_entidade_relaciona, total_entidades_que_relacionam_com_esta_entidade, totalizar_de_entidade, validar_conformidade_com_modelo # NOVO: Para codificar URLs
 
 ENTITY_TYPE = 'Person'
 
@@ -20,8 +20,7 @@ st.set_page_config(
     layout="wide"              # (Opcional) Pode ser "centered" (padrão) ou "wide" para ocupar mais largura
 )
 
-st.title("Análise do conjunto de dados Person")
-st.write("Aqui você poderá ver gráficos e tabelas com os dados extraídos dos seus arquivos XML.")
+st.title("Análise do conjunto de dados Pessoas")
 
 xml_file_path = st.text_input(
         "Caminho do banco de dados local:",
@@ -36,6 +35,13 @@ xml_file_path3 = st.text_input(
         value=settings.LOCAL_DATABASE_DEDUPLICATED_PATH,
         key="xml_directory_input3",
         disabled=True
+    )
+
+brcris_model_path = st.text_input(
+        "Caminho do BrCris Model:",
+        value=r'C:\worksapce\IBICT\brcris-model\modelo_brcris.xml',
+        placeholder="Digite o caminho completo aqui...",
+        key="xml_brcrismodel_input"
     )
 
 valor_numerico = st.number_input(
@@ -53,20 +59,22 @@ valor_numerico = st.number_input(
 if st.button("Atualizar"):
     status_message = st.empty()
     
-    
     with st.spinner(f"Carregando os dados..."):
         try:
             db = connect_local_database()
-            # depara_db = connect_depara_database()
             deduplicated_db = connect_deduplicated_database()
             
             # Total de Registros da Entidade Gerada
             totalizar_de_entidade(entity_type=ENTITY_TYPE, db=db,deduplicated_db = deduplicated_db)
             
+            # Verifica se todo os campos estão dentro do modelo
+            validar_conformidade_com_modelo(entity_type=ENTITY_TYPE, db=deduplicated_db,model_path=brcris_model_path, limit=valor_numerico)
             
             # Listagem de entidade deduplicadas
-            listing_of_deduplicated_records(entity_type=ENTITY_TYPE,field_name='name', db=deduplicated_db, limit=valor_numerico)              
-            
+            listing_of_deduplicated_records(entity_type=ENTITY_TYPE,field_name='name', db=deduplicated_db, limit=valor_numerico)
+                          
+            # BrCriss mal formatado
+            brcriss_mal_formatado(entity_type=ENTITY_TYPE, db=deduplicated_db, limit=valor_numerico)
 
             # BrCriss Id duplicado
             brcriss_duplicado(entity_type=ENTITY_TYPE, db=deduplicated_db)
@@ -79,10 +87,7 @@ if st.button("Atualizar"):
             
             # Total de entidades que relacionam com esta entidade
             total_entidades_que_relacionam_com_esta_entidade(entity_type=ENTITY_TYPE, db=deduplicated_db)
-                   
-            
-            
-                            
+                                 
             db.close()
             deduplicated_db.close()
 
