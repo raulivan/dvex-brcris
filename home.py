@@ -7,6 +7,7 @@ from rules.rule03 import rule_03
 from rules.rule04 import rule_04
 from rules.rule05 import rule_05
 from rules.rule06 import rule_06
+from rules.rule07 import rule_07
 from ulti import load_model_structure, load_model_relations
 
 
@@ -73,26 +74,29 @@ def main():
                     st.error(f"O caminho informado não é um diretório válido ou não existe: `{xml_file_path}`. Por favor, verifique o caminho e tente novamente.")
                     st.stop() 
                 
-                # df_rule_01 = rule_01(files_path=files_path)
-                # if df_rule_01.empty == False:
-                #     st.write("Inconformidades identificadas:")
-                #     st.write(df_rule_01)
+                # Verifica o nome dos arquivos 
+                df_rule_01 = rule_01(files_path=files_path)
+                if df_rule_01.empty == False:
+                    st.write("Inconformidades identificadas:")
+                    st.write(df_rule_01)
                 
-                # df_rule_02 = rule_02(files_path=files_path,model_structure=model_structure)
-                # if df_rule_02.empty == False:
-                #     st.write("Inconformidades identificadas:")
-                #     st.write(df_rule_02)
+                # Verifica a estrutura dos arquivos
+                df_rule_02 = rule_02(files_path=files_path,model_structure=model_structure)
+                if df_rule_02.empty == False:
+                    st.write("Inconformidades identificadas:")
+                    st.write(df_rule_02)
                 
                 
-                # df_rule_03_parte_01, df_rule_03_parte_02 = rule_03(files_path=files_path,model_structure=model_structure,model_relation=model_structure_relation)
-                # df_rule_03_parte_01['total'] = df_rule_03_parte_01['total'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
-                # st.write('Quantidade de entidades')
-                # st.write(df_rule_03_parte_01)
+                df_rule_03_parte_01, df_rule_03_parte_02 = rule_03(files_path=files_path,model_structure=model_structure,model_relation=model_structure_relation)
+                df_rule_03_parte_01['total'] = df_rule_03_parte_01['total'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
+                st.write('Quantidade de entidades')
+                st.write(df_rule_03_parte_01)
                 
-                # df_rule_03_parte_02['total'] = df_rule_03_parte_02['total'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
-                # st.write('Quantidade de relacionamentos')
-                # st.write(df_rule_03_parte_02)
+                df_rule_03_parte_02['total'] = df_rule_03_parte_02['total'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
+                st.write('Quantidade de relacionamentos')
+                st.write(df_rule_03_parte_02)
                 
+                # Essa regra valida orunits, porem mudou a forma logo é desnecessário fazer isso
                 # df_rule_04_parte_01, df_rule_04_parte_02 = rule_04(files_path=files_path)
                 # df_rule_04_parte_01['total'] = df_rule_04_parte_01['total'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
                 # st.write('OrgUnits válidas')
@@ -110,6 +114,12 @@ def main():
                 
                 st.write('Resultado do processo de deduplicação')
                 st.write(df_rule_06)
+                
+                
+                df_rule_07 = rule_07(files_path=files_path)
+                if df_rule_07.empty == False:
+                    st.write("Inconformidades identificadas:")
+                    st.write(df_rule_07)
                 
             else:
                 st.warning("Por favor, informe os valores solicitados.")

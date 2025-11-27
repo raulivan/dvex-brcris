@@ -8,10 +8,14 @@ from ulti import connect_deduplicated_database, connect_local_database, get_scal
 
 from streamlit_modal import Modal
 import webbrowser # NOVO: Para abrir links em nova aba
-import urllib.parse # NOVO: Para codificar URLs
+import urllib.parse
+
+from util.analysis_functions import listing_of_deduplicated_records, totalizar_de_entidade
+
+ENTITY_TYPE = 'Software'
 
 st.set_page_config(
-    page_title="Software", 
+    page_title=ENTITY_TYPE, 
     page_icon="💾", 
     layout="wide"              # (Opcional) Pode ser "centered" (padrão) ou "wide" para ocupar mais largura
 )
@@ -33,16 +37,59 @@ xml_file_path3 = st.text_input(
         disabled=True
     )
 
-def __build_table_deduplicated(db):
-    # pass
-    df_deduplicated = pd.read_sql_query(f"SELECT distinct entity_id, value as title FROM tb_entity_fields_deduplicated where type = 'Software' and name like '%title%' order by  value limit 500000", db)
+valor_numerico = st.number_input(
+    "Informe o limite de registros a serem exibidos nas listagens (valor numérico entre 0 e 500.000):", # Rótulo para o input
+    min_value=0,                                     # Valor mínimo permitido
+    max_value=500000,                                # Valor máximo permitido
+    value=500000,                                    # Valor inicial padrão
+    step=1000                                        # Incremento de 1000
+)
+
+
+
+        
+def __build_table_duplicated_identifiers(db):
+    df_deduplicated = pd.read_sql_query(f"""
+                                        
+                SELECT entity_id, namespace, COUNT(valor) as total
+                FROM
+                (SELECT 
+                    substr(identifier, 1, instr(identifier, '::') - 1) AS namespace,
+                    substr(identifier, instr(identifier, '::') + 2) AS valor,
+                    entity_id,
+                    type
+                FROM 
+                    tb_semantic_identifier_deduplicated
+                WHERE 
+                    type = 'Software') as tabela
+                group by namespace, entity_id
+                having COUNT(valor) > 1
+                limit {valor_numerico}                          
+                                        """, db)
 
     if not df_deduplicated.empty:
-        st.subheader(f"Primeiras 500.000 Entidades deduplicadas")
+        st.subheader(f"Entidades com Identificadores Semanticos duplicados")
         st.dataframe(df_deduplicated) 
         st.info(f"Total de linhas: {len(df_deduplicated.index):.2f}")
-        
-        
+
+
+def __build_total_merge(db):
+    
+    df = pd.read_sql_query(f"""
+                           
+            SELECT dp.entity_id_para,e.type, count(dp.entity_id_de) as total 
+            FROM tb_de_para dp
+            INNER JOIN vw_entidades_deduplicated  e on dp.entity_id_para = e.entity_id
+            group by 1,2
+            order by 2, 3 desc
+
+                           """, db)
+    if not df.empty:
+        st.subheader(f"Total de entidade combinadas após deduplicação")
+        df_filtered = df[df['type'] == 'Software']
+        st.dataframe(df_filtered) 
+        st.info(f"Total de linhas: {len(df.index):.2f}")
+                                
 def __build_char_depositDate(db, deduplicated_db):
     query_grafico = """
     SELECT tab.ano, count(tab.entity_id) as total
@@ -107,28 +154,7 @@ def __build_char_depositDate(db, deduplicated_db):
 
         st.plotly_chart(fig, use_container_width=True)
 
-def __build_totalizadores(db, deduplicated_db):
 
-    coluna_01, coluna_02 = st.columns([1, 1 ]) # Com 2 colunas iguais
-
-    
-    with coluna_01:
-        total = int(get_scalar(conn=db,sql="SELECT count(entity_id) as total FROM vw_entidades where type = 'Software' "))
-        # formatted_total_registros = f"{total:,.0f}".replace(",", "X").replace(".", ",").replace("X", ".")
-        # st.metric(label="Total de Entidades", value=formatted_total_registros)
-        
-        
-        st.markdown(
-                build_card(label="Total de Entidades",total=total),
-                unsafe_allow_html=True
-            )
-    
-    with coluna_02:
-        total = int(get_scalar(conn=deduplicated_db,sql="SELECT count(entity_id) as total FROM vw_entidades_deduplicated where type = 'Software'"))
-        st.markdown(
-                build_card(label="Total de Entidades únicas",total=total),
-                unsafe_allow_html=True
-            )
 
 def __build_total_relacionamentos(db):
     
@@ -146,22 +172,7 @@ def __build_total_relacionamentos(db):
         st.dataframe(df) 
         st.info(f"Total de linhas: {len(df.index):.2f}")
 
-def __build_total_merge(db):
-    
-    df = pd.read_sql_query(f"""
-                           
-            SELECT dp.entity_id_para,e.type, count(dp.entity_id_de) as total 
-            FROM tb_de_para dp
-            INNER JOIN vw_entidades_deduplicated  e on dp.entity_id_para = e.entity_id
-            group by 1,2
-            order by 2, 3 desc
 
-                           """, db)
-    if not df.empty:
-        st.subheader(f"Total de entidade combinadas após deduplicação")
-        df_filtered = df[df['type'] == 'Software']
-        st.dataframe(df_filtered) 
-        st.info(f"Total de linhas: {len(df.index):.2f}")
 
 def __build_total_atributos(db):
     
@@ -180,30 +191,7 @@ def __build_total_atributos(db):
         st.info(f"Total de linhas: {len(df.index):.2f}")
 
 
-def __build_table_duplicated_identifiers(db):
-    # pass
-    df_deduplicated = pd.read_sql_query(f"""
-                                        
-                SELECT entity_id, namespace, COUNT(valor) as total
-                FROM
-                (SELECT 
-                    substr(identifier, 1, instr(identifier, '::') - 1) AS namespace,
-                    substr(identifier, instr(identifier, '::') + 2) AS valor,
-                    entity_id,
-                    type
-                FROM 
-                    tb_semantic_identifier_deduplicated
-                WHERE 
-                    type = 'Software') as tabela
-                group by entity_id, namespace
-                having COUNT(valor) > 1
-                                        
-                                        """, db)
 
-    if not df_deduplicated.empty:
-        st.subheader(f"Entidades com Identificadores Semanticos duplicados")
-        st.dataframe(df_deduplicated) 
-        st.info(f"Total de linhas: {len(df_deduplicated.index):.2f}")
     
 # Botão para carregar os dados
 if st.button("Atualizar"):
@@ -214,24 +202,18 @@ if st.button("Atualizar"):
             db = connect_local_database()
             deduplicated_db = connect_deduplicated_database()
             
-            df = pd.read_sql_query(f"SELECT entity_id,value as title, file  FROM tb_entity_fields where type = 'Software' and name like '%title%' order by  value limit 500000", db)
-
-            st.info("Indicador #1")
-            # Exibir no Streamlit
-            if not df.empty:
-                st.subheader(f"Primeiras 500.000 Entidades geradas")
-                st.dataframe(df) 
-                st.info(f"Total de linhas: {len(df.index):.2f}")
-                
-            else:
-                status_message.warning(f"Não existem dados para serem exibidos. ⚠️")
-                st.stop() 
-                
+            totalizar_de_entidade(entity_type=ENTITY_TYPE, db=db,deduplicated_db = deduplicated_db)
             
             st.markdown("---")
             
-            st.info("Indicador #2")
-            __build_table_deduplicated(deduplicated_db)
+            # Listagem de entidade deduplicadas
+            listing_of_deduplicated_records(entity_type=ENTITY_TYPE,field_name='title.lattes', db=deduplicated_db, limit=valor_numerico)              
+            
+            st.markdown("---")
+            
+            
+    
+            
             
             st.markdown("---")
             # Identificadores semanticos duiplicados
@@ -283,4 +265,3 @@ if st.button("Atualizar"):
 
 
     
-

@@ -2,6 +2,7 @@ import os
 
 from rules.rule05 import rule_05
 from rules.rule06 import rule_06
+from rules.rule07 import rule_07
 import settings
 from pathlib import Path
 from ulti import load_model_structure, load_model_relations
@@ -20,9 +21,13 @@ if __name__ == "__main__":
     # df_rule_02 = rule_02(files_path=files_path,model_structure=model_structure)
     # print(df_rule_02.head())
     
-    rule_05(files_path=files_path)
+    # rule_05(files_path=files_path)
     
     # rule_06(files_path=files_path)
-                    
+    
+    
+    df_rule_07 = rule_07(files_path=files_path)
+    df_rule_07.to_xml('inconformidades.xml')
+    
                     
                     

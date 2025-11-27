@@ -70,6 +70,26 @@ def __create_database(db:Connection):
                 FROM tb_entity_fields
                 """)
     
+    execute_sql(conn=db,sql="""
+               CREATE VIEW IF NOT EXISTS vw_semantic_identifier_duplicado
+                AS 		
+                    SELECT 
+                        tb_semantic_identifier.type as entity_type,
+                        tb_semantic_identifier.entity_id,
+                        substr(tb_semantic_identifier.identifier, 1, instr(tb_semantic_identifier.identifier, '::') - 1) AS namespace,
+                        count(tb_semantic_identifier.id) as total
+                    FROM 
+                        tb_semantic_identifier
+                    GROUP BY 
+                        tb_semantic_identifier.type,
+                        tb_semantic_identifier.entity_id,
+                        substr(tb_semantic_identifier.identifier, 1, instr(tb_semantic_identifier.identifier, '::') - 1)
+                    having count(tb_semantic_identifier.id) > 1
+                    ORDER BY
+                        substr(tb_semantic_identifier.identifier, 1, instr(tb_semantic_identifier.identifier, '::') - 1)
+                    
+                """)
+    
     db.commit()
     
 def __create_deduplicated_database(db:Connection):
@@ -145,6 +165,8 @@ def __create_deduplicated_database(db:Connection):
 
     execute_sql(conn=db,sql="CREATE INDEX idx_tb_entity_relations_deduplicated_de_entity_id ON tb_entity_relations_deduplicated (de_entity_id);")
     
+    execute_sql(conn=db,sql="CREATE INDEX idx_tb_entity_relations_deduplicated_para_entity_id ON tb_entity_relations_deduplicated (para_entity_id);")
+    
     execute_sql(conn=db,sql="CREATE INDEX idx_tb_entity_files_entity_id ON tb_entity_files (entity_id);")
     
     
@@ -154,6 +176,28 @@ def __create_deduplicated_database(db:Connection):
                 SELECT distinct entity_id,type 
                 FROM tb_entity_fields_deduplicated
                 """)
+
+    execute_sql(conn=db,sql="""
+               CREATE VIEW IF NOT EXISTS vw_semantic_identifier_duplicado_deduplicated
+                AS 		
+                    SELECT 
+                        tb_semantic_identifier_deduplicated.type as entity_type,
+                        tb_semantic_identifier_deduplicated.entity_id,
+                        substr(tb_semantic_identifier_deduplicated.identifier, 1, instr(tb_semantic_identifier_deduplicated.identifier, '::') - 1) AS namespace,
+                        count(tb_semantic_identifier_deduplicated.id) as total
+                    FROM 
+                        tb_semantic_identifier_deduplicated
+                    GROUP BY 
+                        tb_semantic_identifier_deduplicated.type,
+                        tb_semantic_identifier_deduplicated.entity_id,
+                        substr(tb_semantic_identifier_deduplicated.identifier, 1, instr(tb_semantic_identifier_deduplicated.identifier, '::') - 1)
+                    having count(tb_semantic_identifier_deduplicated.id) > 1
+                    ORDER BY
+                        substr(tb_semantic_identifier_deduplicated.identifier, 1, instr(tb_semantic_identifier_deduplicated.identifier, '::') - 1)
+                    
+                """)
+    
+    
     
     db.commit()
 

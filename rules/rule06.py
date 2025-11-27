@@ -231,6 +231,18 @@ def rule_06(files_path: List)-> pd.DataFrame:
     
     status_message.success(f"✅ Carga concluída com sucesso")
     
+    
+    # Limpando a tabela de arquivos duplicados
+    depois = get_result_rows(conn=deduplicated_db,sql="""
+                                        WITH ids_a_manter AS (
+                                            SELECT MIN(id) AS id
+                                            FROM tb_entity_files
+                                            GROUP BY entity_id, file
+                                        )
+                                        DELETE FROM tb_entity_files
+                                        WHERE id NOT IN (SELECT id FROM ids_a_manter);
+                                        """)    
+    
     db.close()
     deduplicated_db.close()
     

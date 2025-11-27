@@ -40,6 +40,7 @@ def load_model_relations(model_file:str):
         relation_name = relation.get('name')
         
         model_structure[relation_name] = {
+            'name': relation_name,
             'description': relation.get('description'),
             'fromEntity': relation.get('fromEntity'),
             'toEntity': relation.get('toEntity')
