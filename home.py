@@ -81,20 +81,20 @@ def main():
                     st.write(df_rule_01)
                 
                 # Verifica a estrutura dos arquivos
-                df_rule_02 = rule_02(files_path=files_path,model_structure=model_structure)
-                if df_rule_02.empty == False:
-                    st.write("Inconformidades identificadas:")
-                    st.write(df_rule_02)
+                # df_rule_02 = rule_02(files_path=files_path,model_structure=model_structure)
+                # if df_rule_02.empty == False:
+                #     st.write("Inconformidades identificadas:")
+                #     st.write(df_rule_02)
                 
                 
-                df_rule_03_parte_01, df_rule_03_parte_02 = rule_03(files_path=files_path,model_structure=model_structure,model_relation=model_structure_relation)
-                df_rule_03_parte_01['total'] = df_rule_03_parte_01['total'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
-                st.write('Quantidade de entidades')
-                st.write(df_rule_03_parte_01)
+                # df_rule_03_parte_01, df_rule_03_parte_02 = rule_03(files_path=files_path,model_structure=model_structure,model_relation=model_structure_relation)
+                # df_rule_03_parte_01['total'] = df_rule_03_parte_01['total'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
+                # st.write('Quantidade de entidades')
+                # st.write(df_rule_03_parte_01)
                 
-                df_rule_03_parte_02['total'] = df_rule_03_parte_02['total'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
-                st.write('Quantidade de relacionamentos')
-                st.write(df_rule_03_parte_02)
+                # df_rule_03_parte_02['total'] = df_rule_03_parte_02['total'].apply(lambda x: f'{x:,.0f}'.replace(',', '.'))
+                # st.write('Quantidade de relacionamentos')
+                # st.write(df_rule_03_parte_02)
                 
                 # Essa regra valida orunits, porem mudou a forma logo é desnecessário fazer isso
                 # df_rule_04_parte_01, df_rule_04_parte_02 = rule_04(files_path=files_path)

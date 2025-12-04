@@ -228,64 +228,68 @@ def rule_05(files_path: List)-> pd.DataFrame:
                 tb_entity_relations = {}
                 
                 # Percorrendo cada entidade do arquivo
-                for entity in root.find('entities'):
-                    conmtador_auxiliar = conmtador_auxiliar + 1
-                    
-                    entity_type = entity.get('type')
-                    entity_ref = entity.get('ref')
-                    entity_id = uuid.uuid4()
-                    
-                    if entity_ref == None:
-                        entity_ref = f'{entity_type}{conmtador_auxiliar}'
-                    
-                    de_para_entity[entity_ref]={
-                        'id': entity_id.hex,
-                        'type': entity_type,
-                        'file': xml_file
-                    }
-                    
-                    # Recuperando os identificadores semanticos
-                    for semantic_id  in entity.findall('.//semanticIdentifier'):    
-                        semantic_id_value = semantic_id.text  
-                        if (semantic_id_value == None) or (semantic_id_value == ''):
-                            semantic_id_value =  semantic_id.get('value')
-                       
-                        tb_semantic_identifier.append((entity_ref, semantic_id_value))
-                            
-                    # Recuperando os campos da entidade
-                    for field in entity.findall('field'):
-                        field_name = field.get('name')
-                        field_value = format_text_sql_field(field.get('value'))
+                tem_entity = root.find('entities')
+                if tem_entity != None:
+                    for entity in root.find('entities'):
+                        conmtador_auxiliar = conmtador_auxiliar + 1
                         
-                       
-                        if field_value != 'null':
-                            if not entity_ref in tb_entity_fields:
-                                tb_entity_fields[entity_ref] = [(field_name, field_value)]
-                            else:
-                                tb_entity_fields[entity_ref].append((field_name, field_value))
-                        else:
-                            for sub_field in field.findall('field'):
-                                sub_field_name = sub_field.get('name')
-                                sub_field_value = format_text_sql_field(sub_field.get('value'))
+                        entity_type = entity.get('type')
+                        entity_ref = entity.get('ref')
+                        entity_id = uuid.uuid4()
+                        
+                        if entity_ref == None:
+                            entity_ref = f'{entity_type}{conmtador_auxiliar}'
+                        
+                        de_para_entity[entity_ref]={
+                            'id': entity_id.hex,
+                            'type': entity_type,
+                            'file': xml_file
+                        }
+                        
+                        # Recuperando os identificadores semanticos
+                        for semantic_id  in entity.findall('.//semanticIdentifier'):    
+                            semantic_id_value = semantic_id.text  
+                            if (semantic_id_value == None) or (semantic_id_value == ''):
+                                semantic_id_value =  semantic_id.get('value')
+                        
+                            tb_semantic_identifier.append((entity_ref, semantic_id_value))
                                 
-                                field_name_formated = f"{field_name}.{sub_field_name}"
-                                
+                        # Recuperando os campos da entidade
+                        for field in entity.findall('field'):
+                            field_name = field.get('name')
+                            field_value = format_text_sql_field(field.get('value'))
+                            
+                        
+                            if field_value != 'null':
                                 if not entity_ref in tb_entity_fields:
-                                    tb_entity_fields[entity_ref] = [(field_name_formated, sub_field_value)]
+                                    tb_entity_fields[entity_ref] = [(field_name, field_value)]
                                 else:
-                                    tb_entity_fields[entity_ref].append((field_name_formated, sub_field_value))
-                                
-                
-                # Recuperando os relacionamentos
-                for relation in root.find('relations'):
-                    relation_type = relation.get('type')
-                    fromEntityRef = relation.get('fromEntityRef')
-                    toEntityRef = relation.get('toEntityRef')
+                                    tb_entity_fields[entity_ref].append((field_name, field_value))
+                            else:
+                                for sub_field in field.findall('field'):
+                                    sub_field_name = sub_field.get('name')
+                                    sub_field_value = format_text_sql_field(sub_field.get('value'))
+                                    
+                                    field_name_formated = f"{field_name}.{sub_field_name}"
+                                    
+                                    if not entity_ref in tb_entity_fields:
+                                        tb_entity_fields[entity_ref] = [(field_name_formated, sub_field_value)]
+                                    else:
+                                        tb_entity_fields[entity_ref].append((field_name_formated, sub_field_value))
+                                    
                     
-                    if not relation_type in tb_entity_relations:
-                        tb_entity_relations[relation_type] = [(fromEntityRef, toEntityRef)]
-                    else:
-                        tb_entity_relations[relation_type].append((fromEntityRef, toEntityRef))
+                # Recuperando os relacionamentos
+                tem_relation = root.find('relations')
+                if tem_relation != None:
+                    for relation in root.find('relations'):
+                        relation_type = relation.get('type')
+                        fromEntityRef = relation.get('fromEntityRef')
+                        toEntityRef = relation.get('toEntityRef')
+                        
+                        if not relation_type in tb_entity_relations:
+                            tb_entity_relations[relation_type] = [(fromEntityRef, toEntityRef)]
+                        else:
+                            tb_entity_relations[relation_type].append((fromEntityRef, toEntityRef))
                 
                 # Inserindo no banco de dados os identificadores semanticos
                 for item in tb_semantic_identifier:

@@ -21,13 +21,13 @@ if __name__ == "__main__":
     # df_rule_02 = rule_02(files_path=files_path,model_structure=model_structure)
     # print(df_rule_02.head())
     
-    # rule_05(files_path=files_path)
+    rule_05(files_path=files_path)
     
-    # rule_06(files_path=files_path)
+    rule_06(files_path=files_path)
     
     
-    df_rule_07 = rule_07(files_path=files_path)
-    df_rule_07.to_xml('inconformidades.xml')
+    # df_rule_07 = rule_07(files_path=files_path)
+    # df_rule_07.to_xml('inconformidades.xml')
     
                     
                     
